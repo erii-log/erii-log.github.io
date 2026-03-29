@@ -254,6 +254,7 @@ console.log(`  Posts dir: ${POSTS_DIR}`);
 console.log(`  Output dir: ${OUT_DIR}`);
 
 cleanDir(OUT_DIR);
+fs.writeFileSync(path.join(OUT_DIR, ".nojekyll"), "");
 
 const posts = collectPosts();
 console.log(`  Total posts: ${posts.length}`);
