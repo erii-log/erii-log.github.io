@@ -247,6 +247,12 @@ function buildAboutPage() {
   console.log("  About page: built");
 }
 
+function copySiteinfo() {
+  const siteinfoDir = path.join(__dirname, "_siteinfo");
+  if (!fs.existsSync(siteinfoDir)) return;
+  copyRecursive(siteinfoDir, OUT_DIR);
+  console.log("  Site info: copied");
+}
 // --- Main ---
 
 console.log("Building static site...");
@@ -272,5 +278,6 @@ buildSearchIndex(posts);
 copyAssets();
 copyPostsAssets();
 buildAboutPage();
+copySiteinfo();
 
 console.log("Done!");
