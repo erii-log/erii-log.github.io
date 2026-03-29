@@ -12,6 +12,7 @@ const {
   renderAbout,
 } = require("./templates");
 
+const SITEINFO_DIR = path.resolve(__dirname, "../_siteinfo");
 const POSTS_DIR = path.resolve(__dirname, "../posts");
 const OUT_DIR = path.resolve(__dirname, "../docs");
 const PER_PAGE = 30;
@@ -248,9 +249,8 @@ function buildAboutPage() {
 }
 
 function copySiteinfo() {
-  const siteinfoDir = path.join(__dirname, "_siteinfo");
-  if (!fs.existsSync(siteinfoDir)) return;
-  copyRecursive(siteinfoDir, OUT_DIR);
+  if (!fs.existsSync(SITEINFO_DIR)) return;
+  copyRecursive(SITEINFO_DIR, OUT_DIR);
   console.log("  Site info: copied");
 }
 // --- Main ---
