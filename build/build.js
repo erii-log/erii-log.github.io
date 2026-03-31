@@ -50,7 +50,11 @@ function collectPosts() {
 
   for (const monthDir of monthDirs.sort()) {
     const monthPath = path.join(POSTS_DIR, monthDir);
-    const files = fs.readdirSync(monthPath).filter((f) => f.endsWith(".md"));
+    const files = fs.readdirSync(monthPath).filter((f) => {
+        if (!f.endsWith(".md")) return false;
+        const stat = fs.statSync(path.join(monthPath, f));
+        return stat.size > 0;
+      });
 
     for (const file of files.sort()) {
       const date = file.replace(".md", "");
