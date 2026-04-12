@@ -500,6 +500,7 @@ main > p:last-child a:hover {
 
 .search-dialog {
   position: relative;
+  z-index: 1;
   width: 100%;
   max-width: 600px;
   margin: 0 16px;
