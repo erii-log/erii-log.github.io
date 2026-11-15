@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>さとう める - めるペディア</title>
+<style>
+  body {
+    font-family: "Hiragino Kaku Gothic ProN", "ヒラギノ角ゴ ProN W3", "Yu Gothic", "游ゴシック", Meiryo, sans-serif;
+    background: #fff;
+    color: #202122;
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+  }
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 16px 24px;
+  }
+  .top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    color: #54595d;
+    border-bottom: 1px solid #a2a9b1;
+    padding-bottom: 6px;
+    margin-bottom: 4px;
+  }
+  .top-bar .left { display: flex; gap: 12px; align-items: center; }
+  .top-bar .right { display: flex; gap: 14px; align-items: center; }
+  .top-bar .right span { cursor: pointer; }
+  .top-bar .right span:hover { text-decoration: underline; color: #0645ad; }
+  h1 {
+    font-family: "Linux Libertine", Georgia, "Times New Roman", serif;
+    font-weight: normal;
+    font-size: 2em;
+    border-bottom: 1px solid #a2a9b1;
+    padding-bottom: 6px;
+    margin: 0 0 8px 0;
+  }
+  .tabs {
+    display: flex;
+    gap: 16px;
+    font-size: 13px;
+    color: #54595d;
+    margin-bottom: 12px;
+  }
+  .tabs .active { color: #202122; }
+  .tabs span { cursor: pointer; }
+  .source {
+    font-size: 13px;
+    color: #54595d;
+    margin-bottom: 16px;
+  }
+  .content-wrapper {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+  }
+  .main {
+    flex: 1;
+    min-width: 0;
+  }
+  .infobox {
+    width: 280px;
+    border: 1px solid #a2a9b1;
+    background: #f8f9fa;
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+  .infobox .ib-title {
+    background: #eaecf0;
+    text-align: center;
+    font-weight: bold;
+    padding: 8px 6px;
+    font-size: 15px;
+    border-bottom: 1px solid #a2a9b1;
+  }
+  .infobox .ib-title .ruby {
+    display: block;
+    font-size: 10px;
+    font-weight: normal;
+    color: #54595d;
+    margin-bottom: 2px;
+  }
+  .infobox .ib-section {
+    background: #eaecf0;
+    text-align: center;
+    padding: 4px 6px;
+    font-weight: bold;
+    border-top: 1px solid #a2a9b1;
+    border-bottom: 1px solid #a2a9b1;
+  }
+  .infobox table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .infobox th, .infobox td {
+    padding: 5px 8px;
+    vertical-align: top;
+    text-align: left;
+    border-bottom: 1px solid #e6e6e6;
+  }
+  .infobox th {
+    width: 34%;
+    background: #f8f9fa;
+    font-weight: normal;
+    color: #202122;
+  }
+  .infobox td { background: #fff; }
+  .infobox .ib-footer {
+    text-align: center;
+    font-size: 11px;
+    color: #54595d;
+    padding: 6px;
+    border-top: 1px solid #a2a9b1;
+    background: #f8f9fa;
+  }
+  .infobox .ib-footer a { color: #0645ad; text-decoration: none; }
+  h2 {
+    font-family: "Linux Libertine", Georgia, "Times New Roman", serif;
+    font-weight: normal;
+    font-size: 1.5em;
+    border-bottom: 1px solid #a2a9b1;
+    padding-bottom: 4px;
+    margin-top: 20px;
+  }
+  h3 {
+    font-size: 1.1em;
+    margin-top: 18px;
+    margin-bottom: 6px;
+    font-weight: bold;
+  }
+  p { margin: 0 0 10px 0; }
+  ul { margin: 4px 0 10px 0; padding-left: 24px; }
+  li { margin-bottom: 4px; }
+  a { color: #0645ad; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  sup.ref a {
+    color: #0645ad;
+    font-size: 0.75em;
+  }
+  .category-bar {
+    margin-top: 30px;
+    border: 1px solid #a2a9b1;
+    background: #f8f9fa;
+    font-size: 13px;
+  }
+  .category-bar .cb-header {
+    padding: 6px 10px;
+    display: flex;
+    justify-content: space-between;
+    background: #eaecf0;
+    border-bottom: 1px solid #a2a9b1;
+  }
+  .category-bar .cb-header .left { color: #54595d; }
+  .category-bar .cb-header .center { font-weight: bold; }
+  .category-bar .cb-header .right { color: #0645ad; cursor: pointer; }
+  .category-bar .cb-body {
+    padding: 6px 10px;
+    color: #54595d;
+  }
+  .lang-select {
+    font-size: 13px;
+    color: #54595d;
+  }
+  @media (max-width: 760px) {
+    .content-wrapper { flex-direction: column-reverse; }
+    .infobox { width: 100%; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="top-bar">
+    <div class="left">
+      <span>☰</span>
+    </div>
+    <div class="right">
+      <span class="lang-select">文A 5の言語版 ⌄</span>
+    </div>
+  </div>
+
+  <h1>さとう　める</h1>
+
+  <div class="tabs">
+    <span class="active">ページ</span>
+    <span>ノート</span>
+    <span style="margin-left:auto">閲覧</span>
+    <span>ソースを閲覧</span>
+    <span>履歴表示</span>
+  </div>
+
+  <div class="source">出典: フリー百科事典『めるペディア (merupedia)』</div>
+
+  <div class="content-wrapper">
+    <div class="main">
+      <p>
+        <b>さとう　める</b>（さとう　める、2004年9月22日<sup class="ref"><a href="#">[1]</a></sup> - ）は、日本の女性アイドル、タレント、歌手である。おかしの国出身。メイプロ所属。
+      </p>
+
+      <h2>略歴</h2>
+
+      <h3>2017年</h3>
+      <ul>
+        <li>幼少期からメイプルストーリーや『痛いのは嫌なので防御力に極振りしたいと思います』などのアニメを好んで観ていた。また、3歳から習っていたお料理で人前で料理をする機会も多かったため、漠然と「人前で仕事ができたら」と考えていた<sup class="ref"><a href="#">[7]</a></sup>。その後、13歳の時に「第1036回 メイプロタレントスカウトキャラバン 次世代アイドルオーディション」に参加し<sup class="ref"><a href="#">[8]</a></sup>、1,002,745名の応募者の中からファイナリスト10人に選出され、10月10日に公開オーディションに出場する。グランプリは逃したもののスカウトされ、メイプロの所属タレントとなる。</li>
+      </ul>
+
+      <h3>2019年</h3>
+      <ul>
+        <li>アイドル活動を開始し、『めいぷる♡じゃぱん！』のセンターとしてアイドルデビュー<sup class="ref"><a href="#">[4]</a></sup><sup class="ref"><a href="#">[5]</a></sup><sup class="ref"><a href="#">[8]</a></sup>。</li>
+      </ul>
+
+      <h3>2020年</h3>
+      <ul>
+        <li>5月13日、シングル「全部、砂糖のせいだ」でメジャーデビュー<sup class="ref"><a href="#">[22]</a></sup>。</li>
+        <li>9月13日、初の個人名義曲となる「Maple Princess」<sup class="ref"><a href="#">[23]</a></sup>を初披露した<sup class="ref"><a href="#">[24]</a></sup>。ラジオ番組「さとうめる 楓の宮殿」の主題歌として、翌9月16日よりオンエア。のちに配信限定シングルとしてリリースされた<sup class="ref"><a href="#">[25]</a></sup><sup class="ref"><a href="#">[26]</a></sup>。</li>
+      </ul>
+
+      <h3>2021年</h3>
+      <ul>
+        <li>9月11日、meru名義で活動する新レーベル「Maple Records」を設立し、第1弾シングル「Mapleeeeeeeeee♡」をリリース。「さとうめる」「めいぷる♡じゃぱん！」と並行しつつ、meruとして活動する際は楽曲のイメージや作詞などをより一層、「自分が今一番表現したい世界観」をテーマに展開していくことに<sup class="ref"><a href="#">[41]</a></sup>。</li>
+      </ul>
+
+      <h3>2022年</h3>
+      <ul>
+        <li>初の単独イベントをHEAVEN'S ROCK さいたま新都心VJ-3にて開催。チケットはソールドアウト。<sup class="ref"><a href="#">[43]</a></sup>。</li>
+      </ul>
+
+      <h2>人物</h2>
+      <p>趣味は料理、コスメ集め、ふわふわな動物鑑賞など<sup class="ref"><a href="#">[1]</a></sup>。幼少期から、料理、お菓子作りを習っていた<sup class="ref"><a href="#">[44]</a></sup>。めるという名前は、パティシエだった母親が学生時代に『楓の木の下で告白されたため』つけた。</p>
+
+      <p>好きな食べ物はパンケーキ、マシュマロ、などのお菓子類で、特にメープルシロップが大好物である。</p>
+
+      <p>2021年までカップケーキを作ったことがなく、そのことから自身のラジオ番組『さとうめる 楓の宮殿』の最終回にて人生で初めてカップケーキを作り、大成功に終わった<sup class="ref"><a href="#">[57]</a></sup><sup class="ref"><a href="#">[58]</a></sup>。更に2022年まで家系ラーメンを食べたことがなく、コールドペッパーグルメの企画で初めて楓家を体験した<sup class="ref"><a href="#">[59]</a></sup>。</p>
+    </div>
+
+    <aside class="infobox">
+      <div class="ib-title">
+        <span class="ruby">さとう　める</span>
+        さとう　める
+      </div>
+      <div class="ib-section">プロフィール</div>
+      <table>
+        <tr><th>性別</th><td>女性</td></tr>
+        <tr><th>出生地</th><td>🔴 日本・おかしのくに<sup class="ref"><a href="#">[1]</a></sup></td></tr>
+        <tr><th>生年月日</th><td>2004年9月22日（18歳）</td></tr>
+        <tr><th>血液型</th><td>O型<sup class="ref"><a href="#">[2]</a></sup></td></tr>
+        <tr><th>身長</th><td>156 cm<sup class="ref"><a href="#">[3]</a></sup></td></tr>
+        <tr><th>職業</th><td>アイドル、歌手</td></tr>
+        <tr><th>事務所</th><td>メイプロ<sup class="ref"><a href="#">[1]</a></sup></td></tr>
+        <tr><th>公式サイト</th><td><a href="https://yamazaki-erii.com/">めいぷる♡じゃぱん！オフィシャルHP♡</a></td></tr>
+      </table>
+      <div class="ib-section">音楽活動</div>
+      <table>
+        <tr><th>活動名義</th><td>さとう　める、meru</td></tr>
+        <tr><th>活動期間</th><td>2019年 -</td></tr>
+        <tr><th>ジャンル</th><td>J-POP、アイドルソング</td></tr>
+        <tr><th>職種</th><td>歌手</td></tr>
+        <tr><th>レーベル</th><td>Maple Records</td></tr>
+      </table>
+      <div class="ib-footer">
+        声優：<a href="#">テンプレート</a> | <a href="#">プロジェクト</a> | <a href="#">カテゴリ</a>
+      </div>
+    </aside>
+  </div>
+
+  <div class="category-bar">
+    <div class="cb-header">
+      <span class="left">表・話・編・歴</span>
+      <span class="center">メイプロ (カテゴリ)</span>
+      <span class="right">[表示]</span>
+    </div>
+    <div class="cb-body">典拠管理 ✎</div>
+  </div>
+
+</div>
+</body>
+</html>
