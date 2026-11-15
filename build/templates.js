@@ -76,7 +76,7 @@ ${content}
 </main>
 </div>
 <footer>
-  <p><a href="${root}/about.html">このサイトについて</a></p>
+  <p><a href="${root}/about.html">このサイトについて</a> | <a href="${root}/asset/satou_meru.html">さとうめる</a></p>
 </footer>
 ${hasEmbeds ? `<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
 <script async src="https://www.instagram.com/embed.js"></script>` : ""}
