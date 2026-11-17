@@ -180,20 +180,59 @@ function buildTagPages(posts) {
   console.log(`  Tag pages: ${byTag.size + 1}`);
 }
 
-// --- Step 6: Build sitemap.xml ---
+// --- Step 6: Build sitemap.xml & robots.txt ---
 
-const SITE_BASE_URL = "https://erii-log.github.io/";
+const SITE_BASE_URL = "https://erii-log.github.io";
 
 function buildSitemap(posts) {
-  const postUrls = posts.map((p) => {
-    const lastmod = p.date;
-    return `  <url>\n    <loc>${SITE_BASE_URL}/${p.url}</loc>\n    <lastmod>${lastmod}</lastmod>\n  </url>`;
-  });
+  const urls = [];
+  const latestDate = posts.length > 0 ? posts[0].date : null;
 
-  const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${postUrls.join("\n")}\n</urlset>\n`;
+  // Top page & About page & Tag list page
+  urls.push({ loc: `${SITE_BASE_URL}/`, lastmod: latestDate });
+  if (fs.existsSync(path.join(POSTS_DIR, "about.md"))) {
+    urls.push({ loc: `${SITE_BASE_URL}/about.html`, lastmod: latestDate });
+  }
+  urls.push({ loc: `${SITE_BASE_URL}/tags/`, lastmod: latestDate });
+
+  // Month index pages
+  const monthLatest = new Map();
+  for (const p of posts) {
+    if (!monthLatest.has(p.month)) monthLatest.set(p.month, p.date);
+  }
+  for (const [month, lastmod] of monthLatest) {
+    urls.push({ loc: `${SITE_BASE_URL}/${month}/`, lastmod });
+  }
+
+  // Tag pages
+  const tagLatest = new Map();
+  for (const p of posts) {
+    for (const tag of p.tags) {
+      if (!tagLatest.has(tag)) tagLatest.set(tag, p.date);
+    }
+  }
+  for (const [tag, lastmod] of tagLatest) {
+    urls.push({ loc: `${SITE_BASE_URL}/tags/${tagSlug(tag)}/`, lastmod });
+  }
+
+  // Individual post pages
+  for (const p of posts) {
+    urls.push({ loc: `${SITE_BASE_URL}/${p.url}`, lastmod: p.date });
+  }
+
+  const urlEntries = urls.map(
+    (u) =>
+      `  <url>\n    <loc>${u.loc}</loc>${u.lastmod ? `\n    <lastmod>${u.lastmod}</lastmod>` : ""}\n  </url>`
+  );
+
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urlEntries.join("\n")}\n</urlset>\n`;
 
   writeFile(path.join(OUT_DIR, "sitemap.xml"), xml);
-  console.log(`  Sitemap: ${posts.length} URLs`);
+  writeFile(
+    path.join(OUT_DIR, "robots.txt"),
+    `User-agent: *\nAllow: /\nSitemap: ${SITE_BASE_URL}/sitemap.xml\n`
+  );
+  console.log(`  Sitemap: ${urls.length} URLs`);
 }
 
 // --- Step 7: Build search index ---
