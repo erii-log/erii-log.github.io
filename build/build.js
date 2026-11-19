@@ -70,6 +70,32 @@ function collectPosts() {
         m[1].replace(/\[([^\]]+)\]\([^)]+\)/g, "$1").trim()
       );
 
+      // SEO: pick a topic heading (first specific h3, else first specific h2)
+      // and build a meta description from the day's sections.
+      const cleanHeading = (s) =>
+        s.replace(/\[([^\]]+)\]\([^)]+\)/g, "$1").replace(/[*_`]/g, "").trim();
+      const GENERIC_H3 = new Set([
+        "開催概要", "セットリスト", "グッズ販売", "グッズ", "共演者の方",
+        "Twitter", "Instagram", "TikTok", "詳細", "タイムテーブル",
+      ]);
+      const GENERIC_H2 = new Set(["SNS更新", "ブログ更新", "告知"]);
+      const h3s = [...raw.matchAll(/^### (.+)$/gm)].map((m) => cleanHeading(m[1]));
+      let topic =
+        h3s.find((h) => h && !GENERIC_H3.has(h)) ||
+        tags.map(cleanHeading).find((h) => h && !GENERIC_H2.has(h)) ||
+        null;
+      // Event-like first h2 (e.g. a live/event title) wins over a later h3
+      const firstH2 = tags.length > 0 ? cleanHeading(tags[0]) : null;
+      if (firstH2 && /Event|Live|LIVE|公演|ツアー|TOUR|フェス|舞台/.test(firstH2)) {
+        topic = firstH2;
+      }
+      const [yy, mm, dd] = date.split("-");
+      let description = `山崎エリイの${yy}年${Number(mm)}月${Number(dd)}日の活動記録。`;
+      const sectionList = [...new Set(tags.map(cleanHeading).filter(Boolean))].slice(0, 4);
+      if (sectionList.length > 0) description += `この日の記録：${sectionList.join("、")}。`;
+      if (topic) description += topic;
+      if (description.length > 120) description = description.slice(0, 119) + "…";
+
       // Remove h1 from markdown before rendering (title is shown separately)
       const bodyMd = raw.replace(/^# .+$/m, "").trim();
 
@@ -84,6 +110,8 @@ function collectPosts() {
         month: monthDir,
         title,
         tags,
+        topic,
+        description,
         content,
         url: `${monthDir}/${day}.html`,
       });
@@ -194,6 +222,12 @@ function buildSitemap(posts) {
     urls.push({ loc: `${SITE_BASE_URL}/about.html`, lastmod: latestDate });
   }
   urls.push({ loc: `${SITE_BASE_URL}/tags/`, lastmod: latestDate });
+
+  // Index pagination pages (page 2..N)
+  const totalIndexPages = Math.ceil(posts.length / PER_PAGE);
+  for (let page = 2; page <= totalIndexPages; page++) {
+    urls.push({ loc: `${SITE_BASE_URL}/page/${page}/`, lastmod: latestDate });
+  }
 
   // Month index pages
   const monthLatest = new Map();

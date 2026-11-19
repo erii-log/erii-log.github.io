@@ -41,13 +41,35 @@ ${items}
 </aside>`;
 }
 
-function renderBase(title, content, { hasEmbeds = false, currentMonth = null, root = "." } = {}) {
+const SITE_NAME = "山崎エリイ活動記録";
+const SITE_BASE_URL = "https://erii-log.github.io";
+const SITE_DESCRIPTION = "山崎エリイの活動を1日ごとに記録する非公式ファンサイト。イベント・番組出演・SNS更新・ブログなどを日別にまとめています。";
+
+function renderBase(title, content, { hasEmbeds = false, currentMonth = null, root = ".", fullTitle = null, description = null, path = null, ogType = "website", jsonLd = null, publishedTime = null } = {}) {
+  const pageTitle = fullTitle || `${title} - ${SITE_NAME}`;
+  const desc = description || SITE_DESCRIPTION;
+  const canonical = path ? `${SITE_BASE_URL}${path}` : null;
+  const jsonLdScript = jsonLd
+    ? `\n<script type="application/ld+json">${JSON.stringify(jsonLd).replace(/</g, "\\u003c")}</script>`
+    : "";
   return `<!DOCTYPE html>
 <html lang="ja" data-root="${root}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${escapeHtml(title)} - 山崎エリイ活動記録</title>
+<title>${escapeHtml(pageTitle)}</title>
+<meta name="description" content="${escapeHtml(desc)}">
+${canonical ? `<link rel="canonical" href="${canonical}">` : ""}
+<meta property="og:site_name" content="${SITE_NAME}">
+<meta property="og:title" content="${escapeHtml(pageTitle)}">
+<meta property="og:description" content="${escapeHtml(desc)}">
+<meta property="og:type" content="${ogType}">
+${canonical ? `<meta property="og:url" content="${canonical}">` : ""}
+<meta property="og:locale" content="ja_JP">
+${publishedTime ? `<meta property="article:published_time" content="${publishedTime}">` : ""}
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="${escapeHtml(pageTitle)}">
+<meta name="twitter:description" content="${escapeHtml(desc)}">${jsonLdScript}
 <link rel="icon" href="${root}/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="${root}/css/style.css">
 ${hasEmbeds ? `<link rel="dns-prefetch" href="https://platform.twitter.com">
@@ -116,7 +138,29 @@ function renderPost(post) {
     ${post.content}
   </div>
 </article>`;
-  return renderBase(post.title, content, { hasEmbeds: true, currentMonth: post.month, root });
+  const pageTitle = post.title;
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: pageTitle,
+    description: post.description || "",
+    datePublished: post.date,
+    url: `${SITE_BASE_URL}/${post.url}`,
+    mainEntityOfPage: `${SITE_BASE_URL}/${post.url}`,
+    about: { "@type": "Person", name: "山崎エリイ" },
+    publisher: { "@type": "Organization", name: SITE_NAME, url: SITE_BASE_URL },
+    inLanguage: "ja",
+  };
+  return renderBase(pageTitle, content, {
+    hasEmbeds: true,
+    currentMonth: post.month,
+    root,
+    description: post.description,
+    path: `/${post.url}`,
+    ogType: "article",
+    publishedTime: post.date,
+    jsonLd,
+  });
 }
 
 function renderPostListItem(root, post) {
@@ -158,7 +202,23 @@ function renderIndex(posts, pagination, root) {
 ${posts.map(p => renderPostListItem(root, p)).join("\n")}
 </ul>
 ${renderPagination(pagination.current, pagination.total, `${root}/`)}`;
-  return renderBase("活動記録", content, { root });
+  const isFirst = pagination.current === 1;
+  return renderBase("活動記録", content, {
+    root,
+    fullTitle: isFirst ? `${SITE_NAME}｜山崎エリイの出演・イベント・SNSの日別記録` : null,
+    path: isFirst ? "/" : `/page/${pagination.current}/`,
+    jsonLd: isFirst
+      ? {
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          name: SITE_NAME,
+          url: SITE_BASE_URL,
+          description: SITE_DESCRIPTION,
+          inLanguage: "ja",
+          about: { "@type": "Person", name: "山崎エリイ" },
+        }
+      : null,
+  });
 }
 
 function renderMonthPostItem(root, post) {
@@ -191,7 +251,14 @@ ${toc}
 </nav>
 ${posts.map(p => renderMonthPostItem(root, p)).join("\n<hr>\n")}
 ${monthNav}`;
-  return renderBase(month, content, { hasEmbeds: true, currentMonth: month, root });
+  const [y, m] = month.split("-");
+  return renderBase(month, content, {
+    hasEmbeds: true,
+    currentMonth: month,
+    root,
+    description: `山崎エリイの${y}年${Number(m)}月の活動記録（全${posts.length}日分）。イベント・番組出演・SNS更新などを日別にまとめています。`,
+    path: `/${month}/`,
+  });
 }
 
 function renderTagList(tagCounts) {
@@ -207,7 +274,11 @@ function renderTagList(tagCounts) {
 ${items.join("\n")}
 </ul>
 <p><a href="${root}/index.html">&larr; トップへ</a></p>`;
-  return renderBase("タグ一覧", content, { root });
+  return renderBase("タグ一覧", content, {
+    root,
+    description: "山崎エリイ活動記録のタグ一覧。イベント・番組・レギュラー番組などのカテゴリから日別の記録を探せます。",
+    path: "/tags/",
+  });
 }
 
 function renderTag(tag, posts) {
@@ -219,13 +290,21 @@ function renderTag(tag, posts) {
 ${posts.map(p => renderPostListItem(root, p)).join("\n")}
 </ul>
 <p><a href="${root}/tags/index.html">&larr; タグ一覧</a></p>`;
-  return renderBase(tag, content, { root });
+  return renderBase(tag, content, {
+    root,
+    description: `山崎エリイ活動記録の「${tag}」タグが付いた記録の一覧（全${posts.length}件）。`,
+    path: `/tags/${tagSlug(tag)}/`,
+  });
 }
 
 function renderAbout(htmlContent) {
   const root = ".";
   const content = `<article class="post-full">${htmlContent}</article>`;
-  return renderBase("このサイトについて", content, { root });
+  return renderBase("このサイトについて", content, {
+    root,
+    description: "山崎エリイ活動記録（erii-log）について。公式サイトとは関係のない非公式ファンサイトです。",
+    path: "/about.html",
+  });
 }
 
 module.exports = {
