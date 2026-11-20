@@ -1,6 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
+const { execSync } = require("child_process");
 const markdownIt = require("markdown-it")({ html: true, linkify: true });
 const {
   setMonths,
@@ -15,7 +16,48 @@ const {
 const SITEINFO_DIR = path.resolve(__dirname, "../_siteinfo");
 const POSTS_DIR = path.resolve(__dirname, "../posts");
 const OUT_DIR = path.resolve(__dirname, "../docs");
+const REPO_ROOT = path.resolve(__dirname, "..");
 const PER_PAGE = 30;
+
+function formatMtimeDateJST(filePath) {
+  const stat = fs.statSync(filePath);
+  return new Date(stat.mtimeMs + 9 * 3600 * 1000).toISOString().slice(0, 10);
+}
+
+function loadGitLastModMap() {
+  const map = new Map();
+  try {
+    const dirty = new Set();
+    const statusOut = execSync("git status --porcelain -- posts/", {
+      cwd: REPO_ROOT,
+      encoding: "utf-8",
+    });
+    for (const line of statusOut.split(/\r?\n/)) {
+      if (!line.trim()) continue;
+      const rel = line.slice(3).trim().replace(/^"|"$/g, "");
+      dirty.add(rel);
+    }
+
+    const logOut = execSync("git log --format=COMMIT:%cs --name-only -- posts/", {
+      cwd: REPO_ROOT,
+      encoding: "utf-8",
+      maxBuffer: 50 * 1024 * 1024,
+    });
+    let curDate = null;
+    for (const line of logOut.split(/\r?\n/)) {
+      if (line.startsWith("COMMIT:")) {
+        curDate = line.slice(7).trim();
+      } else if (line.startsWith("posts/") && curDate && !map.has(line)) {
+        if (!dirty.has(line)) {
+          map.set(line, curDate);
+        }
+      }
+    }
+  } catch (_) {
+    // Fallback to filesystem mtime if git is unavailable
+  }
+  return map;
+}
 
 // Tag name → short filesystem-safe slug
 function tagSlug(tag) {
@@ -42,7 +84,7 @@ function cleanDir(dir) {
 
 // --- Step 1: Collect posts ---
 
-function collectPosts() {
+function collectPosts(gitLastModMap) {
   const results = [];
   const monthDirs = fs.readdirSync(POSTS_DIR).filter((d) => {
     return fs.statSync(path.join(POSTS_DIR, d)).isDirectory() && /^\d{4}-\d{2}$/.test(d);
@@ -59,7 +101,10 @@ function collectPosts() {
     for (const file of files.sort()) {
       const date = file.replace(".md", "");
       const day = date.slice(-2);
-      const raw = fs.readFileSync(path.join(monthPath, file), "utf-8");
+      const fullPath = path.join(monthPath, file);
+      const relKey = `posts/${monthDir}/${file}`;
+      const lastmod = gitLastModMap.get(relKey) || formatMtimeDateJST(fullPath);
+      const raw = fs.readFileSync(fullPath, "utf-8");
 
       // Extract title from h1
       const h1Match = raw.match(/^# (.+)$/m);
@@ -108,6 +153,7 @@ function collectPosts() {
         date,
         day,
         month: monthDir,
+        lastmod,
         title,
         tags,
         topic,
@@ -212,27 +258,34 @@ function buildTagPages(posts) {
 
 const SITE_BASE_URL = "https://erii-log.github.io";
 
-function buildSitemap(posts) {
+function buildSitemap(posts, gitLastModMap) {
   const urls = [];
-  const latestDate = posts.length > 0 ? posts[0].date : null;
+  const maxDate = (a, b) => (!a ? b : !b ? a : a > b ? a : b);
+  const latestLastMod = posts.reduce((acc, p) => maxDate(acc, p.lastmod), null);
 
   // Top page & About page & Tag list page
-  urls.push({ loc: `${SITE_BASE_URL}/`, lastmod: latestDate });
-  if (fs.existsSync(path.join(POSTS_DIR, "about.md"))) {
-    urls.push({ loc: `${SITE_BASE_URL}/about.html`, lastmod: latestDate });
+  urls.push({ loc: `${SITE_BASE_URL}/`, lastmod: latestLastMod });
+  const aboutPath = path.join(POSTS_DIR, "about.md");
+  if (fs.existsSync(aboutPath)) {
+    const aboutLastMod =
+      gitLastModMap.get("posts/about.md") || formatMtimeDateJST(aboutPath);
+    urls.push({ loc: `${SITE_BASE_URL}/about.html`, lastmod: aboutLastMod });
   }
-  urls.push({ loc: `${SITE_BASE_URL}/tags/`, lastmod: latestDate });
+  urls.push({ loc: `${SITE_BASE_URL}/tags/`, lastmod: latestLastMod });
 
   // Index pagination pages (page 2..N)
   const totalIndexPages = Math.ceil(posts.length / PER_PAGE);
   for (let page = 2; page <= totalIndexPages; page++) {
-    urls.push({ loc: `${SITE_BASE_URL}/page/${page}/`, lastmod: latestDate });
+    const start = (page - 1) * PER_PAGE;
+    const slice = posts.slice(start, start + PER_PAGE);
+    const pageLastMod = slice.reduce((acc, p) => maxDate(acc, p.lastmod), latestLastMod);
+    urls.push({ loc: `${SITE_BASE_URL}/page/${page}/`, lastmod: pageLastMod });
   }
 
   // Month index pages
   const monthLatest = new Map();
   for (const p of posts) {
-    if (!monthLatest.has(p.month)) monthLatest.set(p.month, p.date);
+    monthLatest.set(p.month, maxDate(monthLatest.get(p.month), p.lastmod));
   }
   for (const [month, lastmod] of monthLatest) {
     urls.push({ loc: `${SITE_BASE_URL}/${month}/`, lastmod });
@@ -242,7 +295,7 @@ function buildSitemap(posts) {
   const tagLatest = new Map();
   for (const p of posts) {
     for (const tag of p.tags) {
-      if (!tagLatest.has(tag)) tagLatest.set(tag, p.date);
+      tagLatest.set(tag, maxDate(tagLatest.get(tag), p.lastmod));
     }
   }
   for (const [tag, lastmod] of tagLatest) {
@@ -251,7 +304,7 @@ function buildSitemap(posts) {
 
   // Individual post pages
   for (const p of posts) {
-    urls.push({ loc: `${SITE_BASE_URL}/${p.url}`, lastmod: p.date });
+    urls.push({ loc: `${SITE_BASE_URL}/${p.url}`, lastmod: p.lastmod });
   }
 
   const urlEntries = urls.map(
@@ -339,7 +392,8 @@ console.log(`  Output dir: ${OUT_DIR}`);
 cleanDir(OUT_DIR);
 fs.writeFileSync(path.join(OUT_DIR, ".nojekyll"), "");
 
-const posts = collectPosts();
+const gitLastModMap = loadGitLastModMap();
+const posts = collectPosts(gitLastModMap);
 console.log(`  Total posts: ${posts.length}`);
 
 // Pass month list to templates for sidebar navigation
@@ -350,7 +404,7 @@ buildPostPages(posts);
 buildIndexPages(posts);
 buildMonthPages(posts);
 buildTagPages(posts);
-buildSitemap(posts);
+buildSitemap(posts, gitLastModMap);
 buildSearchIndex(posts);
 copyAssets();
 copyPostsAssets();
