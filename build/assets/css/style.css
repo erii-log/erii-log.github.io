@@ -657,7 +657,7 @@ kbd {
     width: 100%;
     position: static;
     max-height: none;
-    order: -1;
+    order: 1;
   }
 
   .tag-list {
