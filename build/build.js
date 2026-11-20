@@ -19,9 +19,9 @@ const OUT_DIR = path.resolve(__dirname, "../docs");
 const REPO_ROOT = path.resolve(__dirname, "..");
 const PER_PAGE = 30;
 
-function formatMtimeDateJST(filePath) {
+function formatMtimeDateUTC(filePath) {
   const stat = fs.statSync(filePath);
-  return new Date(stat.mtimeMs + 9 * 3600 * 1000).toISOString().slice(0, 10);
+  return new Date(stat.mtimeMs).toISOString().slice(0, 10);
 }
 
 function loadGitLastModMap() {
@@ -38,7 +38,7 @@ function loadGitLastModMap() {
       dirty.add(rel);
     }
 
-    const logOut = execSync("git log --format=COMMIT:%cs --name-only -- posts/", {
+    const logOut = execSync("git log --format=COMMIT:%ct --name-only -- posts/", {
       cwd: REPO_ROOT,
       encoding: "utf-8",
       maxBuffer: 50 * 1024 * 1024,
@@ -46,7 +46,10 @@ function loadGitLastModMap() {
     let curDate = null;
     for (const line of logOut.split(/\r?\n/)) {
       if (line.startsWith("COMMIT:")) {
-        curDate = line.slice(7).trim();
+        const sec = Number(line.slice(7).trim());
+        curDate = Number.isFinite(sec)
+          ? new Date(sec * 1000).toISOString().slice(0, 10)
+          : null;
       } else if (line.startsWith("posts/") && curDate && !map.has(line)) {
         if (!dirty.has(line)) {
           map.set(line, curDate);
@@ -103,7 +106,7 @@ function collectPosts(gitLastModMap) {
       const day = date.slice(-2);
       const fullPath = path.join(monthPath, file);
       const relKey = `posts/${monthDir}/${file}`;
-      const lastmod = gitLastModMap.get(relKey) || formatMtimeDateJST(fullPath);
+      const lastmod = gitLastModMap.get(relKey) || formatMtimeDateUTC(fullPath);
       const raw = fs.readFileSync(fullPath, "utf-8");
 
       // Extract title from h1
@@ -268,7 +271,7 @@ function buildSitemap(posts, gitLastModMap) {
   const aboutPath = path.join(POSTS_DIR, "about.md");
   if (fs.existsSync(aboutPath)) {
     const aboutLastMod =
-      gitLastModMap.get("posts/about.md") || formatMtimeDateJST(aboutPath);
+      gitLastModMap.get("posts/about.md") || formatMtimeDateUTC(aboutPath);
     urls.push({ loc: `${SITE_BASE_URL}/about.html`, lastmod: aboutLastMod });
   }
   urls.push({ loc: `${SITE_BASE_URL}/tags/`, lastmod: latestLastMod });
