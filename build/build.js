@@ -318,12 +318,11 @@ function buildSitemap(posts, gitLastModMap) {
   const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urlEntries.join("\n")}\n</urlset>\n`;
 
   writeFile(path.join(OUT_DIR, "sitemap.xml"), xml);
-  writeFile(path.join(OUT_DIR, "sitemap-main.xml"), xml);
   writeFile(
     path.join(OUT_DIR, "robots.txt"),
-    `User-agent: *\nAllow: /\nSitemap: ${SITE_BASE_URL}/sitemap.xml\nSitemap: ${SITE_BASE_URL}/sitemap-main.xml\n`
+    `User-agent: *\nAllow: /\nSitemap: ${SITE_BASE_URL}/sitemap.xml\n`
   );
-  console.log(`  Sitemap: ${urls.length} URLs (sitemap.xml, sitemap-main.xml)`);
+  console.log(`  Sitemap: ${urls.length} URLs`);
 }
 
 // --- Step 7: Build search index ---
