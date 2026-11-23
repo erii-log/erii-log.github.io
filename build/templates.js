@@ -8,9 +8,20 @@ function tagSlug(tag) {
   return crypto.createHash("md5").update(tag).digest("hex").slice(0, 10);
 }
 
-// months is set by build.js before rendering
+// months and common keywords are set by build.js before rendering
 let _months = [];
 function setMonths(months) { _months = months; }
+
+let _commonKeywords = [];
+function setCommonKeywords(keywords) { _commonKeywords = keywords; }
+
+function buildKeywordsMeta(extraKeywords = []) {
+  const all = [..._commonKeywords, ...extraKeywords]
+    .map((k) => (k ? String(k).trim() : ""))
+    .filter(Boolean);
+  const unique = [...new Set(all)];
+  return unique.join(", ");
+}
 
 function renderMonthNav(root, currentMonth) {
   // Group months by year
@@ -45,9 +56,10 @@ const SITE_NAME = "山崎エリイ活動記録";
 const SITE_BASE_URL = "https://erii-log.github.io";
 const SITE_DESCRIPTION = "山崎エリイの活動を1日ごとに記録する非公式ファンサイト。イベント・番組出演・SNS更新・ブログなどを日別にまとめています。";
 
-function renderBase(title, content, { hasEmbeds = false, currentMonth = null, root = ".", fullTitle = null, description = null, path = null, ogType = "website", jsonLd = null, publishedTime = null } = {}) {
+function renderBase(title, content, { hasEmbeds = false, currentMonth = null, root = ".", fullTitle = null, description = null, keywords = [], path = null, ogType = "website", jsonLd = null, publishedTime = null } = {}) {
   const pageTitle = fullTitle || `${title} - ${SITE_NAME}`;
   const desc = description || SITE_DESCRIPTION;
+  const keywordsContent = buildKeywordsMeta(keywords);
   const canonical = path ? `${SITE_BASE_URL}${path}` : null;
   const jsonLdScript = jsonLd
     ? `\n<script type="application/ld+json">${JSON.stringify(jsonLd).replace(/</g, "\\u003c")}</script>`
@@ -59,7 +71,7 @@ function renderBase(title, content, { hasEmbeds = false, currentMonth = null, ro
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${escapeHtml(pageTitle)}</title>
 <meta name="description" content="${escapeHtml(desc)}">
-${canonical ? `<link rel="canonical" href="${canonical}">` : ""}
+${keywordsContent ? `<meta name="keywords" content="${escapeHtml(keywordsContent)}">\n` : ""}${canonical ? `<link rel="canonical" href="${canonical}">` : ""}
 <meta property="og:site_name" content="${SITE_NAME}">
 <meta property="og:title" content="${escapeHtml(pageTitle)}">
 <meta property="og:description" content="${escapeHtml(desc)}">
@@ -156,6 +168,7 @@ function renderPost(post) {
     currentMonth: post.month,
     root,
     description: post.description,
+    keywords: [...post.tags, ...(post.topic ? [post.topic] : [])],
     path: `/${post.url}`,
     ogType: "article",
     publishedTime: post.date,
@@ -252,11 +265,13 @@ ${toc}
 ${posts.map(p => renderMonthPostItem(root, p)).join("\n<hr>\n")}
 ${monthNav}`;
   const [y, m] = month.split("-");
+  const monthTags = [...new Set(posts.flatMap((p) => p.tags))];
   return renderBase(month, content, {
     hasEmbeds: true,
     currentMonth: month,
     root,
     description: `山崎エリイの${y}年${Number(m)}月の活動記録（全${posts.length}日分）。イベント・番組出演・SNS更新などを日別にまとめています。`,
+    keywords: [`${y}年${Number(m)}月`, ...monthTags],
     path: `/${month}/`,
   });
 }
@@ -293,6 +308,7 @@ ${posts.map(p => renderPostListItem(root, p)).join("\n")}
   return renderBase(tag, content, {
     root,
     description: `山崎エリイ活動記録の「${tag}」タグが付いた記録の一覧（全${posts.length}件）。`,
+    keywords: [tag],
     path: `/tags/${tagSlug(tag)}/`,
   });
 }
@@ -309,6 +325,7 @@ function renderAbout(htmlContent) {
 
 module.exports = {
   setMonths,
+  setCommonKeywords,
   renderBase,
   renderPost,
   renderIndex,

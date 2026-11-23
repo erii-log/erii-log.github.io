@@ -5,6 +5,7 @@ const { execSync } = require("child_process");
 const markdownIt = require("markdown-it")({ html: true, linkify: true });
 const {
   setMonths,
+  setCommonKeywords,
   renderPost,
   renderIndex,
   renderMonth,
@@ -17,7 +18,17 @@ const SITEINFO_DIR = path.resolve(__dirname, "../_siteinfo");
 const POSTS_DIR = path.resolve(__dirname, "../posts");
 const OUT_DIR = path.resolve(__dirname, "../docs");
 const REPO_ROOT = path.resolve(__dirname, "..");
+const KEYWORD_FILE = path.resolve(REPO_ROOT, "keywords.txt");
 const PER_PAGE = 30;
+
+function loadCommonKeywords() {
+  if (!fs.existsSync(KEYWORD_FILE)) return [];
+  const raw = fs.readFileSync(KEYWORD_FILE, "utf-8");
+  return raw
+    .split(/\r?\n|,|、/)
+    .map((s) => s.trim())
+    .filter((s) => s && !s.startsWith("#"));
+}
 
 function formatMtimeDateUTC(filePath) {
   const stat = fs.statSync(filePath);
@@ -399,9 +410,12 @@ const gitLastModMap = loadGitLastModMap();
 const posts = collectPosts(gitLastModMap);
 console.log(`  Total posts: ${posts.length}`);
 
-// Pass month list to templates for sidebar navigation
+// Pass month list and common keywords to templates
 const months = [...new Set(posts.map(p => p.month))].sort();
 setMonths(months);
+const commonKeywords = loadCommonKeywords();
+setCommonKeywords(commonKeywords);
+console.log(`  Common keywords: ${commonKeywords.length}`);
 
 buildPostPages(posts);
 buildIndexPages(posts);
