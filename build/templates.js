@@ -38,7 +38,7 @@ function renderMonthNav(root, currentMonth) {
     const monthLinks = months.map(m => {
       const mm = m.slice(5, 7);
       const cls = m === currentMonth ? ' class="active"' : '';
-      return `<a href="${root}/${m}/index.html"${cls}>${mm}月</a>`;
+      return `<a href="${root}/${m}/"${cls}>${mm}月</a>`;
     }).join(" ");
     return `<details${currentMonth && currentMonth.startsWith(year) ? " open" : ""}>
 <summary>${year}年</summary>
@@ -97,8 +97,8 @@ ${hasEmbeds ? `<link rel="dns-prefetch" href="https://platform.twitter.com">
 <body>
 <header>
   <nav>
-    <a href="${root}/index.html" class="site-title">山崎エリイ活動記録</a>
-    <a href="${root}/tags/index.html">タグ一覧</a>
+    <a href="${root}/" class="site-title">山崎エリイ活動記録</a>
+    <a href="${root}/tags/">タグ一覧</a>
     <a href="${root}/about.html">このサイトについて</a>
     <button type="button" class="search-trigger" aria-label="検索">検索 <kbd>Ctrl+K</kbd></button>
   </nav>
@@ -131,7 +131,7 @@ ${hasEmbeds ? `<script async src="https://platform.twitter.com/widgets.js" chars
 
 function renderTagBadges(root, tags) {
   return tags.map(t =>
-    `<a href="${root}/tags/${tagSlug(t)}/index.html" class="tag">${escapeHtml(t)}</a>`
+    `<a href="${root}/tags/${tagSlug(t)}/" class="tag">${escapeHtml(t)}</a>`
   ).join(" ");
 }
 
@@ -143,7 +143,7 @@ function renderPost(post) {
   <div class="tags">${renderTagBadges(root, post.tags)}</div>
   <div class="post-nav">
     ${post.prevUrl ? `<a href="${root}/${post.prevUrl}">&larr; 前の日</a>` : "<span></span>"}
-    <a href="${root}/${post.month}/index.html">月の一覧</a>
+    <a href="${root}/${post.month}/">月の一覧</a>
     ${post.nextUrl ? `<a href="${root}/${post.nextUrl}">&rarr; 次の日</a>` : "<span></span>"}
   </div>
   <div class="post-content">
@@ -187,14 +187,14 @@ function renderPagination(current, total, baseUrl) {
   if (total <= 1) return "";
   const links = [];
   if (current > 1) {
-    const prev = current === 2 ? `${baseUrl}index.html` : `${baseUrl}page/${current - 1}/index.html`;
+    const prev = current === 2 ? `${baseUrl}` : `${baseUrl}page/${current - 1}/`;
     links.push(`<a href="${prev}">&laquo; 前へ</a>`);
   }
 
   const start = Math.max(1, current - 3);
   const end = Math.min(total, current + 3);
   for (let i = start; i <= end; i++) {
-    const url = i === 1 ? `${baseUrl}index.html` : `${baseUrl}page/${i}/index.html`;
+    const url = i === 1 ? `${baseUrl}` : `${baseUrl}page/${i}/`;
     if (i === current) {
       links.push(`<span class="current">${i}</span>`);
     } else {
@@ -203,7 +203,7 @@ function renderPagination(current, total, baseUrl) {
   }
 
   if (current < total) {
-    links.push(`<a href="${baseUrl}page/${current + 1}/index.html">次へ &raquo;</a>`);
+    links.push(`<a href="${baseUrl}page/${current + 1}/">次へ &raquo;</a>`);
   }
   return `<nav class="pagination">${links.join(" ")}</nav>`;
 }
@@ -250,9 +250,9 @@ function renderMonth(month, posts, { prevMonth = null, nextMonth = null } = {}) 
     `<li><a href="#${p.day}">${escapeHtml(p.title)}</a></li>`
   ).join("\n");
   const monthNav = `<div class="post-nav">
-    ${prevMonth ? `<a href="${root}/${prevMonth}/index.html">&larr; ${prevMonth}</a>` : "<span></span>"}
-    <a href="${root}/index.html">トップへ</a>
-    ${nextMonth ? `<a href="${root}/${nextMonth}/index.html">${nextMonth} &rarr;</a>` : "<span></span>"}
+    ${prevMonth ? `<a href="${root}/${prevMonth}/">&larr; ${prevMonth}</a>` : "<span></span>"}
+    <a href="${root}/">トップへ</a>
+    ${nextMonth ? `<a href="${root}/${nextMonth}/">${nextMonth} &rarr;</a>` : "<span></span>"}
   </div>`;
   const content = `
 <h1>${month}</h1>
@@ -281,14 +281,14 @@ function renderTagList(tagCounts) {
   const items = tagCounts
     .sort((a, b) => b.count - a.count)
     .map(({ tag, count }) =>
-      `<li><a href="${root}/tags/${tagSlug(tag)}/index.html">${escapeHtml(tag)}</a> <span class="count">(${count})</span></li>`
+      `<li><a href="${root}/tags/${tagSlug(tag)}/">${escapeHtml(tag)}</a> <span class="count">(${count})</span></li>`
     );
   const content = `
 <h1>タグ一覧</h1>
 <ul class="tag-list">
 ${items.join("\n")}
 </ul>
-<p><a href="${root}/index.html">&larr; トップへ</a></p>`;
+<p><a href="${root}/">&larr; トップへ</a></p>`;
   return renderBase("タグ一覧", content, {
     root,
     description: "山崎エリイ活動記録のタグ一覧。イベント・番組・レギュラー番組などのカテゴリから日別の記録を探せます。",
@@ -304,7 +304,7 @@ function renderTag(tag, posts) {
 <ul class="post-list">
 ${posts.map(p => renderPostListItem(root, p)).join("\n")}
 </ul>
-<p><a href="${root}/tags/index.html">&larr; タグ一覧</a></p>`;
+<p><a href="${root}/tags/">&larr; タグ一覧</a></p>`;
   return renderBase(tag, content, {
     root,
     description: `山崎エリイ活動記録の「${tag}」タグが付いた記録の一覧（全${posts.length}件）。`,
